@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yumumu.syncServer.mapper.ClientsMapper">
+
+    <resultMap id="BaseResultMap" type="com.yumumu.syncServer.model.po.Clients">
+        <id property="id" column="ID" jdbcType="OTHER"/>
+        <result property="clientId" column="CLIENT_ID" jdbcType="VARCHAR"/>
+        <result property="createTime" column="CREATE_TIME" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="UPDATE_TIME" jdbcType="TIMESTAMP"/>
+        <result property="currentFileId" column="CURRENT_FILE_ID" jdbcType="OTHER"/>
+        <result property="clientIp" column="CLIENT_IP" jdbcType="OTHER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        ID
+        ,CLIENT_ID,CREATE_TIME,
+        UPDATE_TIME,CURRENT_FILE_ID,CLIENT_IP
+    </sql>
+</mapper>
