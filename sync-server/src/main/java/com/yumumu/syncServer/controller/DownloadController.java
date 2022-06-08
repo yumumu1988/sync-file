@@ -2,14 +2,20 @@ package com.yumumu.syncServer.controller;
 
 import java.io.*;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import com.alibaba.fastjson.JSONObject;
 import com.yumumu.syncServer.model.bo.ClientInfo;
+import com.yumumu.syncServer.model.bo.DownloadFileInfo;
 import com.yumumu.syncServer.model.bo.ResultData;
+import com.yumumu.syncServer.service.ClientsService;
+import com.yumumu.syncServer.utils.AccessUtils;
 
 /**
  * @author zhanghailin
@@ -19,18 +25,34 @@ import com.yumumu.syncServer.model.bo.ResultData;
 @RequestMapping("/download")
 public class DownloadController {
 
+    @Value("${file.dir}")
+    private String fileDir;
+
+    @Resource
+    private ClientsService clientsService;
+
     @PostMapping("/client/{clientId}")
     public ResultData getFileId(@PathVariable("clientId") String clientId, @RequestBody ClientInfo clientInfo) {
-
-        return ResultData.success(3);
+        if (!AccessUtils.access(clientInfo)) {
+            return ResultData.failed("ACCESS FAILED");
+        }
+        DownloadFileInfo downloadFileInfo = clientsService.getDownloadFileInfo(clientId);
+        if (!StringUtils.isEmpty(downloadFileInfo.getTempName())) {
+            return ResultData.success(downloadFileInfo);
+        }
+        return ResultData.failed("NO FILES");
     }
 
-    @PostMapping("/client/{clientId}/file/{fileId}")
-    public void downloadFile(@PathVariable("clientId") String clientId, @PathVariable("fileId") Integer fileId,
+    @PostMapping("/client/{clientId}/file/{tempName}")
+    public void downloadFile(@PathVariable("clientId") String clientId, @PathVariable("tempName") String tempName,
         @RequestBody ClientInfo clientInfo, HttpServletResponse response) {
+        if (!AccessUtils.access(clientInfo)) {
+            return;
+        }
+
         System.out.println(JSONObject.toJSONString(clientInfo));
         // String filePath = null;
-        String filePath = "D:\\test\\1223.txt";
+        String filePath = fileDir + tempName;
 
         File file = new File(filePath);
         if (file.exists()) {
@@ -52,6 +74,8 @@ public class DownloadController {
                     os.write(buffer, 0, i);
                     i = bis.read(buffer);
                 }
+
+                clientsService.updateFileIndex(clientId, tempName);
             } catch (IOException ex) {
                 // do something,
                 // probably forward to an Error page

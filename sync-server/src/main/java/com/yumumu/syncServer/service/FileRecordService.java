@@ -10,5 +10,9 @@ import com.yumumu.syncServer.model.po.FileRecord;
  */
 public interface FileRecordService extends IService<FileRecord> {
 
-    void addNewFile(String name, String tempFileName, long size, String md5);
+    void addNewFile(String name, String tempFileName, long size, String clientId, String md5);
+
+    FileRecord getDownloadFileByClientIdAndIndex(String clientId, Integer fileIndex);
+
+    FileRecord getFileRecordByTempName(String tempName);
 }

@@ -52,6 +52,11 @@ public class FileRecord implements Serializable {
     private Date createTime;
 
     /**
+     *
+     */
+    private String clientId;
+
+    /**
      * 
      */
     private Integer enable;

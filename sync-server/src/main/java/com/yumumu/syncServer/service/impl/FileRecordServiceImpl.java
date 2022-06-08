@@ -22,9 +22,9 @@ public class FileRecordServiceImpl extends ServiceImpl<FileRecordMapper, FileRec
 
     @Transactional
     @Override
-    public void addNewFile(String name, String tempFileName, long size, String md5) {
-        LambdaQueryWrapper<FileRecord> wrapper =
-            Wrappers.<FileRecord>lambdaQuery().eq(FileRecord::getFilename, name).eq(FileRecord::getEnable, 1);
+    public void addNewFile(String name, String tempFileName, long size, String clientId, String md5) {
+        LambdaQueryWrapper<FileRecord> wrapper = Wrappers.<FileRecord>lambdaQuery().eq(FileRecord::getFilename, name)
+            .eq(FileRecord::getEnable, 1).ne(FileRecord::getClientId, clientId);
         FileRecord fileRecord = this.baseMapper.selectOne(wrapper);
 
         if (null != fileRecord) {
@@ -38,6 +38,7 @@ public class FileRecordServiceImpl extends ServiceImpl<FileRecordMapper, FileRec
             fileRecord.setEnable(1);
             fileRecord.setTempName(tempFileName);
             fileRecord.setFileSize(size);
+            fileRecord.setClientId(clientId);
         } else {
             fileRecord = new FileRecord();
             fileRecord.setFileSize(size);
@@ -47,8 +48,25 @@ public class FileRecordServiceImpl extends ServiceImpl<FileRecordMapper, FileRec
             fileRecord.setCreateTime(new Date());
             fileRecord.setTempName(tempFileName);
             fileRecord.setVersion(1);
+            fileRecord.setClientId(clientId);
         }
 
         save(fileRecord);
+    }
+
+    @Override
+    public FileRecord getDownloadFileByClientIdAndIndex(String clientId, Integer fileIndex) {
+        LambdaQueryWrapper<FileRecord> wrapper = Wrappers.<FileRecord>lambdaQuery();
+        wrapper.eq(FileRecord::getEnable, 1).ne(FileRecord::getClientId, clientId).gt(FileRecord::getId, fileIndex)
+            .orderByAsc(FileRecord::getId);
+        wrapper.last("limit 1");
+        return this.baseMapper.selectOne(wrapper);
+    }
+
+    @Override
+    public FileRecord getFileRecordByTempName(String tempName) {
+        LambdaQueryWrapper<FileRecord> wrapper = Wrappers.<FileRecord>lambdaQuery();
+        wrapper.eq(FileRecord::getTempName, tempName);
+        return this.baseMapper.selectOne(wrapper);
     }
 }

@@ -18,7 +18,7 @@ public class Clients implements Serializable {
      * 
      */
     @TableId(type = IdType.AUTO)
-    private Object id;
+    private Integer id;
 
     /**
      * 
@@ -38,7 +38,7 @@ public class Clients implements Serializable {
     /**
      * 
      */
-    private String currentFileId;
+    private Integer currentFileId;
 
     /**
      * 

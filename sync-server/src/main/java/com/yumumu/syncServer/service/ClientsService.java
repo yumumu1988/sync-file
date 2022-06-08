@@ -1,6 +1,7 @@
 package com.yumumu.syncServer.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.yumumu.syncServer.model.bo.DownloadFileInfo;
 import com.yumumu.syncServer.model.po.Clients;
 
 /**
@@ -10,4 +11,7 @@ import com.yumumu.syncServer.model.po.Clients;
  */
 public interface ClientsService extends IService<Clients> {
 
+    DownloadFileInfo getDownloadFileInfo(String clientId);
+
+    void updateFileIndex(String clientId, String tempName);
 }

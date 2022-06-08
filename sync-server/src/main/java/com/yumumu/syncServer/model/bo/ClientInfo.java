@@ -16,4 +16,5 @@ public class ClientInfo implements Serializable {
     private String sk;
     private String fileName;
     private String fileMd5;
+    private String clientId;
 }
