@@ -14,6 +14,7 @@
     CREATE_TIME TIMESTAMP not null,
     ENABLE      TINYINT   not null,
     TEMP_NAME   varchar(255) not NULL,
+    CLIENT_ID   varchar(255) not NULL,
     constraint FILE_RECORD_PK
     primary key (ID)
     );

@@ -18,12 +18,15 @@ import com.yumumu.syncServer.model.po.Clients;
 import com.yumumu.syncServer.model.po.FileRecord;
 import com.yumumu.syncServer.service.ClientsService;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * @author zhl46
  * @description 针对表【CLIENTS】的数据库操作Service实现
  * @createDate 2022-06-07 22:22:34
  */
 @Service
+@Slf4j
 public class ClientsServiceImpl extends ServiceImpl<ClientsMapper, Clients>
     implements ClientsService, InitializingBean {
 
@@ -75,10 +78,13 @@ public class ClientsServiceImpl extends ServiceImpl<ClientsMapper, Clients>
     @Override
     public void afterPropertiesSet() throws Exception {
         try {
+            log.info("CHECK CLIENTS");
             this.baseMapper.selectById(0);
         } catch (Exception e) {
-            if (e.getMessage().contains("Table \"CLIENTS\" not found; SQL statement")) {
+            log.error(e.getMessage());
+            if (e.getMessage().contains("Table \"CLIENTS\" not found")) {
                 this.baseMapper.initTable();
+                log.info("CREATE CLIENTS");
             }
         }
     }

@@ -13,12 +13,15 @@ import com.yumumu.syncServer.mapper.FileRecordMapper;
 import com.yumumu.syncServer.model.po.FileRecord;
 import com.yumumu.syncServer.service.FileRecordService;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * @author zhl46
  * @description 针对表【FILE_RECORD(文件记录表)】的数据库操作Service实现
  * @createDate 2022-06-07 22:25:18
  */
 @Service
+@Slf4j
 public class FileRecordServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord>
     implements FileRecordService, InitializingBean {
 
@@ -75,10 +78,13 @@ public class FileRecordServiceImpl extends ServiceImpl<FileRecordMapper, FileRec
     @Override
     public void afterPropertiesSet() throws Exception {
         try {
+            log.info("CHECK FILE_RECORD");
             this.baseMapper.selectById(0);
         } catch (Exception e) {
-            if (e.getMessage().contains("Table \"FILE_RECORD\" not found; SQL statement")) {
+            log.error(e.getMessage());
+            if (e.getMessage().contains("Table \"FILE_RECORD\" not found")) {
                 this.baseMapper.initTable();
+                log.info("CREATE FILE_RECORD");
             }
         }
     }
