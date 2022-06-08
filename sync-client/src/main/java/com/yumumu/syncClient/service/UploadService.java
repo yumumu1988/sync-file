@@ -59,7 +59,7 @@ public class UploadService implements InitializingBean {
         jsonObject.put("fileMd5", md5);
         jsonObject.put("clientId", clientId);
         RequestBody requestBody = RequestBody.create(mediaType, jsonObject.toJSONString());
-        Request request = new Request.Builder().post(requestBody).url("http://127.0.0.1:8088/upload/token").build();
+        Request request = new Request.Builder().post(requestBody).url(remoteUrl + "/upload/token").build();
         Response response = null;
         try {
             response = okHttpClient.newCall(request).execute();
