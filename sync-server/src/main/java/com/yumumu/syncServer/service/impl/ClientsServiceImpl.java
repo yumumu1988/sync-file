@@ -4,6 +4,7 @@ import java.util.Date;
 
 import javax.annotation.Resource;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +24,8 @@ import com.yumumu.syncServer.service.ClientsService;
  * @createDate 2022-06-07 22:22:34
  */
 @Service
-public class ClientsServiceImpl extends ServiceImpl<ClientsMapper, Clients> implements ClientsService {
+public class ClientsServiceImpl extends ServiceImpl<ClientsMapper, Clients>
+    implements ClientsService, InitializingBean {
 
     @Resource
     private FileRecordServiceImpl fileRecordService;
@@ -67,6 +69,17 @@ public class ClientsServiceImpl extends ServiceImpl<ClientsMapper, Clients> impl
             LambdaUpdateWrapper<Clients> wrapper = Wrappers.<Clients>lambdaUpdate();
             wrapper.eq(Clients::getClientId, clientId).set(Clients::getCurrentFileId, fileRecord.getId());
             this.baseMapper.update(null, wrapper);
+        }
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        try {
+            this.baseMapper.selectById(0);
+        } catch (Exception e) {
+            if (e.getMessage().contains("Table \"CLIENTS\" not found; SQL statement")) {
+                this.baseMapper.initTable();
+            }
         }
     }
 }

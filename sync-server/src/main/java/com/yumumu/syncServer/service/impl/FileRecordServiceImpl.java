@@ -2,6 +2,7 @@ package com.yumumu.syncServer.service.impl;
 
 import java.util.Date;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +19,8 @@ import com.yumumu.syncServer.service.FileRecordService;
  * @createDate 2022-06-07 22:25:18
  */
 @Service
-public class FileRecordServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> implements FileRecordService {
+public class FileRecordServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord>
+    implements FileRecordService, InitializingBean {
 
     @Transactional
     @Override
@@ -68,5 +70,16 @@ public class FileRecordServiceImpl extends ServiceImpl<FileRecordMapper, FileRec
         LambdaQueryWrapper<FileRecord> wrapper = Wrappers.<FileRecord>lambdaQuery();
         wrapper.eq(FileRecord::getTempName, tempName);
         return this.baseMapper.selectOne(wrapper);
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        try {
+            this.baseMapper.selectById(0);
+        } catch (Exception e) {
+            if (e.getMessage().contains("Table \"FILE_RECORD\" not found; SQL statement")) {
+                this.baseMapper.initTable();
+            }
+        }
     }
 }
