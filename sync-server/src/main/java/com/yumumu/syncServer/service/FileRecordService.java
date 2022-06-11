@@ -1,6 +1,9 @@
 package com.yumumu.syncServer.service;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.yumumu.syncServer.model.bo.DownloadFileInfo;
 import com.yumumu.syncServer.model.po.FileRecord;
 
 /**
@@ -17,4 +20,8 @@ public interface FileRecordService extends IService<FileRecord> {
     FileRecord getFileRecordByTempName(String tempName);
 
     boolean isExisted(String fileMd5, String fileName);
+
+    List<FileRecord> getAllFileList();
+
+    List<DownloadFileInfo> getFileList(Integer pageNum, Integer pageSize, String name);
 }

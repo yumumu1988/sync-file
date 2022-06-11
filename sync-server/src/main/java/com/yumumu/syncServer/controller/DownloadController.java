@@ -1,8 +1,10 @@
 package com.yumumu.syncServer.controller;
 
 import java.io.*;
+import java.util.List;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +15,9 @@ import org.springframework.web.bind.annotation.*;
 import com.yumumu.syncServer.model.bo.ClientInfo;
 import com.yumumu.syncServer.model.bo.DownloadFileInfo;
 import com.yumumu.syncServer.model.bo.ResultData;
+import com.yumumu.syncServer.model.po.FileRecord;
 import com.yumumu.syncServer.service.ClientsService;
+import com.yumumu.syncServer.service.FileRecordService;
 import com.yumumu.syncServer.utils.AccessUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +36,9 @@ public class DownloadController {
 
     @Resource
     private ClientsService clientsService;
+
+    @Resource
+    private FileRecordService fileRecordService;
 
     @PostMapping("/client/{clientId}")
     public ResultData getFileId(@PathVariable("clientId") String clientId, @RequestBody ClientInfo clientInfo) {
@@ -52,9 +59,7 @@ public class DownloadController {
             return;
         }
 
-        // String filePath = null;
         String filePath = fileDir + tempName;
-
         File file = new File(filePath);
         if (file.exists()) {
             // 设置响应类型，这里是下载pdf文件
@@ -95,6 +100,71 @@ public class DownloadController {
                     }
                 }
             }
+        }
+    }
+
+    @GetMapping("/file/{tempName}")
+    public void downloadFile(@PathVariable("tempName") String tempName, HttpServletRequest httpServletRequest,
+        HttpServletResponse response) throws IOException {
+        if (!AccessUtils.access(httpServletRequest)) {
+            response.sendRedirect("/");
+            return;
+        }
+        String filePath = fileDir + tempName;
+        File file = new File(filePath);
+        if (file.exists()) {
+            FileRecord fileRecord = fileRecordService.getFileRecordByTempName(tempName);
+            // 设置响应类型，这里是下载pdf文件
+            // 设置Content-Disposition，设置attachment，浏览器会激活文件下载框；filename指定下载后默认保存的文件名
+            // 不设置Content-Disposition的话，文件会在浏览器内打卡，比如txt、img文件
+            response.addHeader("Content-Disposition", "attachment; filename=" + fileRecord.getFilename());
+            response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+            byte[] buffer = new byte[1024];
+            FileInputStream fis = null;
+            BufferedInputStream bis = null;
+            // if using Java 7, use try-with-resources
+            try {
+                fis = new FileInputStream(file);
+                bis = new BufferedInputStream(fis);
+                OutputStream os = response.getOutputStream();
+                log.info("sending file " + tempName);
+                int i = bis.read(buffer);
+                while (i != -1) {
+                    os.write(buffer, 0, i);
+                    i = bis.read(buffer);
+                }
+                log.info(tempName + " has been sent");
+            } catch (IOException ex) {
+                // do something,
+                // probably forward to an Error page
+            } finally {
+                if (bis != null) {
+                    try {
+                        bis.close();
+                    } catch (IOException e) {
+                    }
+                }
+                if (fis != null) {
+                    try {
+                        fis.close();
+                    } catch (IOException e) {
+                    }
+                }
+            }
+        }
+    }
+
+    @GetMapping("/all")
+    public ResultData<List<FileRecord>> getAll(HttpServletRequest httpServletRequest, HttpServletResponse response)
+        throws IOException {
+        if (!AccessUtils.access(httpServletRequest)) {
+            response.sendRedirect("/");
+            return null;
+        }
+        try {
+            return ResultData.success(fileRecordService.getAllFileList());
+        } catch (Exception e) {
+            return ResultData.failed(e.getMessage());
         }
     }
 

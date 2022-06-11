@@ -1,15 +1,20 @@
 package com.yumumu.syncServer.service.impl;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yumumu.syncServer.mapper.FileRecordMapper;
+import com.yumumu.syncServer.model.bo.DownloadFileInfo;
 import com.yumumu.syncServer.model.po.FileRecord;
 import com.yumumu.syncServer.service.FileRecordService;
 
@@ -28,8 +33,8 @@ public class FileRecordServiceImpl extends ServiceImpl<FileRecordMapper, FileRec
     @Transactional
     @Override
     public void addNewFile(String name, String tempFileName, long size, String clientId, String md5) {
-        LambdaQueryWrapper<FileRecord> wrapper = Wrappers.<FileRecord>lambdaQuery().eq(FileRecord::getFilename, name)
-            .eq(FileRecord::getEnable, 1).ne(FileRecord::getClientId, clientId);
+        LambdaQueryWrapper<FileRecord> wrapper =
+            Wrappers.<FileRecord>lambdaQuery().eq(FileRecord::getFilename, name).eq(FileRecord::getEnable, 1);
         FileRecord fileRecord = this.baseMapper.selectOne(wrapper);
 
         if (null != fileRecord) {
@@ -81,6 +86,31 @@ public class FileRecordServiceImpl extends ServiceImpl<FileRecordMapper, FileRec
         wrapper.eq(FileRecord::getFilename, fileName).eq(FileRecord::getEnable, 1).eq(FileRecord::getMd5, fileMd5);
         FileRecord fileRecord = this.baseMapper.selectOne(wrapper);
         return null != fileRecord;
+    }
+
+    @Override
+    public List<FileRecord> getAllFileList() {
+        LambdaQueryWrapper<FileRecord> wrapper = Wrappers.<FileRecord>lambdaQuery();
+        return this.baseMapper.selectList(wrapper);
+    }
+
+    @Override
+    public List<DownloadFileInfo> getFileList(Integer pageNum, Integer pageSize, String name) {
+        LambdaQueryWrapper<FileRecord> wrapper = Wrappers.<FileRecord>lambdaQuery();
+        wrapper.eq(FileRecord::getEnable, 1);
+        if (!StringUtils.isEmpty(name)) {
+            wrapper.like(FileRecord::getFilename, name);
+        }
+        Page<FileRecord> page = new Page<>(pageNum, pageSize);
+        this.page(page, wrapper);
+        List<DownloadFileInfo> result = new ArrayList<>();
+        page.getRecords().forEach(e -> {
+            DownloadFileInfo downloadFileInfo = new DownloadFileInfo();
+            downloadFileInfo.setTempName(e.getTempName());
+            downloadFileInfo.setFileName(e.getFilename());
+            result.add(downloadFileInfo);
+        });
+        return result;
     }
 
     @Override

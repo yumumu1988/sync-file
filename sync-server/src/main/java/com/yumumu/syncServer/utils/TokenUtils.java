@@ -1,5 +1,6 @@
 package com.yumumu.syncServer.utils;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
@@ -30,6 +31,11 @@ public class TokenUtils {
 
     private static String generateToken(String md5, String fileName, String clientId) {
         String content = String.format("%s %s %s", md5, fileName, clientId);
+        return generate(content);
+    }
+
+    @NotNull
+    private static String generate(String content) {
         System.out.println("CONTENT " + content);
         for (int i = 0; i < (Math.min(salt.length(), 10)); i++) {
             char ch = salt.charAt(i);
