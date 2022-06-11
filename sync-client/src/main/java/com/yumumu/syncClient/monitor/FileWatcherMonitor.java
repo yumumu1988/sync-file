@@ -1,6 +1,8 @@
 package com.yumumu.syncClient.monitor;
 
-import com.yumumu.syncClient.listener.FileListener;
+import java.io.File;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.io.filefilter.HiddenFileFilter;
 import org.apache.commons.io.filefilter.IOFileFilter;
@@ -12,8 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.util.concurrent.TimeUnit;
+import com.yumumu.syncClient.listener.FileListener;
 
 @Component
 public class FileWatcherMonitor {
@@ -31,25 +32,22 @@ public class FileWatcherMonitor {
         // 轮询间隔 5 秒
         long interval = TimeUnit.MILLISECONDS.toMillis(500);
         // 创建过滤器
-        IOFileFilter directories = FileFilterUtils.and(
-                FileFilterUtils.directoryFileFilter(),
-                HiddenFileFilter.VISIBLE);
-        IOFileFilter files = FileFilterUtils.and(
-                FileFilterUtils.fileFileFilter(),
-                FileFilterUtils.suffixFileFilter(".txt"));
-        IOFileFilter filter = FileFilterUtils.or(directories, files);
+        IOFileFilter directories = FileFilterUtils.and(FileFilterUtils.directoryFileFilter(), HiddenFileFilter.VISIBLE);
+        IOFileFilter files =
+            FileFilterUtils.and(FileFilterUtils.fileFileFilter(), FileFilterUtils.suffixFileFilter(".DS_Store"));
+        // IOFileFilter filter = FileFilterUtils.or(directories, files);
+        IOFileFilter filter = FileFilterUtils.notFileFilter(files);
         log.info("MONITOR PATH: " + watchPath);
         // 使用过滤器
-//        FileAlterationObserver observer = new FileAlterationObserver(new File(rootDir), filter);
-        //不使用过滤器
+        // FileAlterationObserver observer = new FileAlterationObserver(new File(rootDir), filter);
+        // 不使用过滤器
 
-        FileAlterationObserver observer = new FileAlterationObserver(new File(rootDir));
+        FileAlterationObserver observer = new FileAlterationObserver(new File(rootDir), filter);
         observer.addListener(fileListener);
-        //创建文件变化监听器
+        // 创建文件变化监听器
         FileAlterationMonitor monitor = new FileAlterationMonitor(interval, observer);
         // 开始监控
         monitor.start();
     }
-
 
 }

@@ -1,10 +1,11 @@
 package com.yumumu.syncClient;
 
-import com.yumumu.syncClient.monitor.FileSyncMonitor;
-import com.yumumu.syncClient.monitor.FileWatcherMonitor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+
+import com.yumumu.syncClient.monitor.FileSyncMonitor;
+import com.yumumu.syncClient.monitor.FileWatcherMonitor;
 
 /**
  * @author zhanghailin

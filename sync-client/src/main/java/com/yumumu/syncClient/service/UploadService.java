@@ -13,7 +13,9 @@ import org.springframework.util.StringUtils;
 import com.alibaba.fastjson.JSONObject;
 import com.yumumu.syncClient.model.FileInfo;
 import com.yumumu.syncClient.model.res.UploadTokenResponse;
+import com.yumumu.syncClient.utils.HttpClientUtil;
 
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 
 /**
@@ -21,6 +23,7 @@ import okhttp3.*;
  * @date 2022/6/7
  */
 @Service
+@Slf4j
 public class UploadService implements InitializingBean {
 
     @Value("${upload.ak}")
@@ -49,8 +52,8 @@ public class UploadService implements InitializingBean {
     }
 
     private String getUploadToken(String fileName, String md5) {
-        // todo 请求获取token
-        OkHttpClient okHttpClient = new OkHttpClient();
+        // 请求获取token
+        OkHttpClient okHttpClient = HttpClientUtil.getClient();
         MediaType mediaType = MediaType.parse("application/json; charset=utf-8");
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("ak", ak);
@@ -75,19 +78,23 @@ public class UploadService implements InitializingBean {
                 System.out.println("TOKEN " + uploadTokenResponse.getBody());
                 return uploadTokenResponse.getBody();
             } else {
+                log.error("get token failed. {}", uploadTokenResponse.getErrorMsg());
                 return null;
             }
         } catch (IOException e) {
             e.printStackTrace();
+            log.error("get token failed. {}", e.getMessage());
+            return null;
+        } finally {
+            if (response != null) {
+                response.close();
+            }
         }
-        response.close();
-        System.out.println(result);
-        return result;
     }
 
     private void upload(FileInfo fileInfo, String token) {
-        // todo 上传文件
-        OkHttpClient okHttpClient = new OkHttpClient();
+        // 上传文件
+        OkHttpClient okHttpClient = HttpClientUtil.getClient();
         RequestBody fileBody = RequestBody.create(MediaType.parse("multipart/form-data"), fileInfo.getFile());
         MultipartBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
             .addFormDataPart("file", fileInfo.getFileName(), fileBody).addFormDataPart("token", token)
@@ -96,6 +103,7 @@ public class UploadService implements InitializingBean {
         Request request = new Request.Builder().post(requestBody).url(remoteUrl + "/upload/file").build();
         Response response = null;
         try {
+            log.info("uploading file " + fileInfo.getFileName());
             response = okHttpClient.newCall(request).execute();
         } catch (IOException e) {
             e.printStackTrace();
@@ -103,11 +111,15 @@ public class UploadService implements InitializingBean {
         String result = null;
         try {
             result = IOUtils.toString(response.body().byteStream(), "UTF-8");
+            log.info(result);
+            log.info(fileInfo.getFileName() + "has been uploaded");
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            if (response != null) {
+                response.close();
+            }
         }
-        response.close();
-        System.out.println(result);
     }
 
     @Override

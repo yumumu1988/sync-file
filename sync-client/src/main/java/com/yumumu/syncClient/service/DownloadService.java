@@ -13,6 +13,7 @@ import org.springframework.util.StringUtils;
 import com.alibaba.fastjson.JSONObject;
 import com.yumumu.syncClient.model.DownloadFileInfo;
 import com.yumumu.syncClient.model.res.DownloadFileInfoResponse;
+import com.yumumu.syncClient.utils.HttpClientUtil;
 
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
@@ -40,25 +41,25 @@ public class DownloadService {
         DownloadFileInfo downloadFileInfo = getDownloadFileInfo();
         if (!StringUtils.isEmpty(downloadFileInfo.getFileName())) {
             // 下载
-            OkHttpClient okHttpClient = new OkHttpClient();
-            MediaType mediaType = MediaType.parse("application/json; charset=utf-8");
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("ak", ak);
-            jsonObject.put("sk", sk);
-            RequestBody requestBody = RequestBody.create(mediaType, jsonObject.toJSONString());
-            Request request = new Request.Builder().post(requestBody)
-                // 访问路径
-                .url(remoteUrl + "/download/client/" + clientId + "/file/" + downloadFileInfo.getTempName()).build();
+            OkHttpClient okHttpClient = HttpClientUtil.getClient();
+            Request request = createOneRequest(
+                remoteUrl + "/download/client/" + clientId + "/file/" + downloadFileInfo.getTempName());
             Response response = null;
             try {
+                log.info("downloading file " + downloadFileInfo.getFileName());
                 response = okHttpClient.newCall(request).execute();
                 byte[] bytes = response.body().bytes();
                 Files.write(Paths.get(fileDir + downloadFileInfo.getFileName()), bytes, StandardOpenOption.CREATE);
+                log.info(downloadFileInfo.getFileName() + " has been downloaded");
                 return true;
             } catch (IOException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
                 return false;
+            } finally {
+                if (response != null) {
+                    response.close();
+                }
             }
             // 转化成byte数组
         } else {
@@ -67,15 +68,8 @@ public class DownloadService {
     }
 
     private DownloadFileInfo getDownloadFileInfo() {
-        OkHttpClient okHttpClient = new OkHttpClient();
-        MediaType mediaType = MediaType.parse("application/json; charset=utf-8");
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("ak", ak);
-        jsonObject.put("sk", sk);
-        RequestBody requestBody = RequestBody.create(mediaType, jsonObject.toJSONString());
-        Request request = new Request.Builder().post(requestBody)
-            // 访问路径
-            .url(remoteUrl + "/download/client/" + clientId).build();
+        OkHttpClient okHttpClient = HttpClientUtil.getClient();
+        Request request = createOneRequest(remoteUrl + "/download/client/" + clientId);
         Response response = null;
         try {
             response = okHttpClient.newCall(request).execute();
@@ -91,7 +85,23 @@ public class DownloadService {
             e.printStackTrace();
             log.error(e.getMessage());
             return new DownloadFileInfo();
+        } finally {
+            if (response != null) {
+                response.close();
+            }
         }
+    }
+
+    private Request createOneRequest(String url) {
+        MediaType mediaType = MediaType.parse("application/json; charset=utf-8");
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("ak", ak);
+        jsonObject.put("sk", sk);
+        RequestBody requestBody = RequestBody.create(mediaType, jsonObject.toJSONString());
+        Request request = new Request.Builder().post(requestBody)
+            // 访问路径
+            .url(url).build();
+        return request;
     }
 
 }
