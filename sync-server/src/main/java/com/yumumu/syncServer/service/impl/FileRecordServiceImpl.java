@@ -76,6 +76,14 @@ public class FileRecordServiceImpl extends ServiceImpl<FileRecordMapper, FileRec
     }
 
     @Override
+    public boolean isExisted(String fileMd5, String fileName) {
+        LambdaQueryWrapper<FileRecord> wrapper = Wrappers.<FileRecord>lambdaQuery();
+        wrapper.eq(FileRecord::getFilename, fileName).eq(FileRecord::getEnable, 1).eq(FileRecord::getMd5, fileMd5);
+        FileRecord fileRecord = this.baseMapper.selectOne(wrapper);
+        return null != fileRecord;
+    }
+
+    @Override
     public void afterPropertiesSet() throws Exception {
         try {
             log.info("CHECK FILE_RECORD");

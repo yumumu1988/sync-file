@@ -21,12 +21,15 @@ import com.yumumu.syncServer.service.FileRecordService;
 import com.yumumu.syncServer.utils.AccessUtils;
 import com.yumumu.syncServer.utils.TokenUtils;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * @author zhanghailin
  * @date 2022/6/7
  */
 @RestController
 @RequestMapping("/upload")
+@Slf4j
 public class UploadController {
 
     @Value("${file.dir}")
@@ -38,9 +41,11 @@ public class UploadController {
     @PostMapping("/file")
     public ResultData uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("token") String token,
         @RequestParam("clientId") String clientId) {
-        File tempFile =
-            new File(fileDir + UUID.randomUUID().toString() + "." + file.getOriginalFilename().split("\\.")[1]);
+        String[] fileInfoArray = file.getOriginalFilename().split("\\.");
+        File tempFile = new File(fileDir + UUID.randomUUID()
+            + (fileInfoArray.length > 1 ? ("." + fileInfoArray[fileInfoArray.length - 1]) : ""));
         try {
+            log.info("receiving file " + file.getOriginalFilename());
             Files.write(Paths.get(tempFile.getAbsolutePath()), file.getBytes(), StandardOpenOption.CREATE);
             String md5;
             try (FileInputStream fileInputStream = new FileInputStream(tempFile)) {
@@ -54,6 +59,7 @@ public class UploadController {
             } else {
                 fileRecordService.addNewFile(file.getOriginalFilename(), tempFile.getName(), file.getSize(), clientId,
                     md5);
+                log.info(file.getOriginalFilename() + " has been saved");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -65,6 +71,10 @@ public class UploadController {
     public ResultData<String> getToken(@RequestBody ClientInfo clientInfo) {
         if (!AccessUtils.access(clientInfo)) {
             return ResultData.failed("ACCESS FAILED");
+        }
+        // 校验重复文件
+        if (fileRecordService.isExisted(clientInfo.getFileMd5(), clientInfo.getFileName())) {
+            return ResultData.failed("文件已存在");
         }
         return ResultData
             .success(TokenUtils.getToken(clientInfo.getFileMd5(), clientInfo.getFileName(), clientInfo.getClientId()));

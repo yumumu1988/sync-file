@@ -15,4 +15,6 @@ public interface FileRecordService extends IService<FileRecord> {
     FileRecord getDownloadFileByClientIdAndIndex(String clientId, Integer fileIndex);
 
     FileRecord getFileRecordByTempName(String tempName);
+
+    boolean isExisted(String fileMd5, String fileName);
 }

@@ -10,12 +10,13 @@ import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import com.alibaba.fastjson.JSONObject;
 import com.yumumu.syncServer.model.bo.ClientInfo;
 import com.yumumu.syncServer.model.bo.DownloadFileInfo;
 import com.yumumu.syncServer.model.bo.ResultData;
 import com.yumumu.syncServer.service.ClientsService;
 import com.yumumu.syncServer.utils.AccessUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author zhanghailin
@@ -23,6 +24,7 @@ import com.yumumu.syncServer.utils.AccessUtils;
  */
 @RestController
 @RequestMapping("/download")
+@Slf4j
 public class DownloadController {
 
     @Value("${file.dir}")
@@ -50,7 +52,6 @@ public class DownloadController {
             return;
         }
 
-        System.out.println(JSONObject.toJSONString(clientInfo));
         // String filePath = null;
         String filePath = fileDir + tempName;
 
@@ -69,12 +70,13 @@ public class DownloadController {
                 fis = new FileInputStream(file);
                 bis = new BufferedInputStream(fis);
                 OutputStream os = response.getOutputStream();
+                log.info("sending file " + tempName + " to " + clientId);
                 int i = bis.read(buffer);
                 while (i != -1) {
                     os.write(buffer, 0, i);
                     i = bis.read(buffer);
                 }
-
+                log.info(tempName + " has been sent to " + clientId);
                 clientsService.updateFileIndex(clientId, tempName);
             } catch (IOException ex) {
                 // do something,
