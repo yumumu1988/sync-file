@@ -2,6 +2,7 @@ package com.yumumu.syncClient.model;
 
 import lombok.Data;
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 
@@ -20,6 +21,9 @@ public class FileInfo implements Serializable {
     private String fileMd5;
     @Getter
     private File file;
+    @Getter
+    @Setter
+    private String relativeFilePath;
 
     public FileInfo(String filePath) {
         this.file = new File(filePath);
@@ -30,6 +34,11 @@ public class FileInfo implements Serializable {
     public FileInfo(File file) {
         this.file = file;
         this.filePath = file.getAbsolutePath();
+    }
+
+    public FileInfo(File file, String relativeFilePath) {
+        this(file);
+        this.relativeFilePath = relativeFilePath;
     }
 
     public String getFileMd5() {

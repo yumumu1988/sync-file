@@ -4,7 +4,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import com.yumumu.syncClient.monitor.FileSyncMonitor;
 import com.yumumu.syncClient.monitor.FileWatcherMonitor;
 
 /**
@@ -16,10 +15,8 @@ public class ClientApplication {
     public static void main(String[] args) {
         ConfigurableApplicationContext context = SpringApplication.run(ClientApplication.class, args);
         FileWatcherMonitor monitor = context.getBean(FileWatcherMonitor.class);
-        FileSyncMonitor syncMonitor = context.getBean(FileSyncMonitor.class);
         try {
             monitor.watch();
-            syncMonitor.sync();
         } catch (Exception e) {
             e.printStackTrace();
         }

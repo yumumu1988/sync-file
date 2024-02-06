@@ -40,29 +40,37 @@ public class UploadController {
 
     @PostMapping("/file")
     public ResultData uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("token") String token,
-        @RequestParam("clientId") String clientId) {
+        @RequestParam("clientId") String clientId, @RequestParam("relativePath") String relativePath) {
         String[] fileInfoArray = file.getOriginalFilename().split("\\.");
-        File tempFile = new File(fileDir + UUID.randomUUID()
+        File tempFile = new File(fileDir + relativePath + UUID.randomUUID()
             + (fileInfoArray.length > 1 ? ("." + fileInfoArray[fileInfoArray.length - 1]) : ""));
         try {
+            File dir = new File(fileDir + relativePath);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
             log.info("receiving file " + file.getOriginalFilename());
             Files.write(Paths.get(tempFile.getAbsolutePath()), file.getBytes(), StandardOpenOption.CREATE);
             String md5;
             try (FileInputStream fileInputStream = new FileInputStream(tempFile)) {
                 md5 = DigestUtils.md5DigestAsHex(fileInputStream);
-            } catch (IOException e) {
-                e.printStackTrace();
-                return ResultData.failed(e.getMessage());
-            }
-            if (!TokenUtils.checkToken(md5, file.getOriginalFilename(), clientId, token)) {
-                tempFile.delete();
-            } else {
-                fileRecordService.addNewFile(file.getOriginalFilename(), tempFile.getName(), file.getSize(), clientId,
-                    md5);
-                log.info(file.getOriginalFilename() + " has been saved");
+                if (!TokenUtils.checkToken(md5, file.getOriginalFilename(), clientId, token)) {
+                    tempFile.delete();
+                } else {
+                    fileRecordService.addNewFile(relativePath + file.getOriginalFilename(), tempFile.getName(), file.getSize(), clientId,
+                            md5);
+                    log.info(file.getOriginalFilename() + " has been saved");
+                    File targetFile = new File(fileDir + relativePath + file.getOriginalFilename());
+                    if (targetFile.exists()) {
+                        targetFile.delete();
+                        log.info(file.getOriginalFilename() + " has been deleted");
+                    }
+                    boolean rename = tempFile.renameTo(targetFile);
+                    log.info("rename: " + rename);
+                }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.info("upload file failed", e);
         }
         return ResultData.success(file.getOriginalFilename());
     }

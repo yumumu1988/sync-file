@@ -98,7 +98,7 @@ public class UploadService implements InitializingBean {
         RequestBody fileBody = RequestBody.create(MediaType.parse("multipart/form-data"), fileInfo.getFile());
         MultipartBody requestBody = new MultipartBody.Builder().setType(MultipartBody.FORM)
             .addFormDataPart("file", fileInfo.getFileName(), fileBody).addFormDataPart("token", token)
-            .addFormDataPart("clientId", clientId).build();
+                .addFormDataPart("relativePath", fileInfo.getRelativeFilePath()).addFormDataPart("clientId", clientId).build();
 
         Request request = new Request.Builder().post(requestBody).url(remoteUrl + "/upload/file").build();
         Response response = null;
